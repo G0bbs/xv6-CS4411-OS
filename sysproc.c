@@ -90,9 +90,48 @@ sys_uptime(void)
   return xticks;
 }
 
-// return memory size
+// return process memory size
 int
 sys_get_mem_size(void)
 { 
   return myproc()->sz;
+}
+
+// return process priority
+int
+sys_getnice(void)
+{ 
+  return myproc()->priority;
+}
+
+// set process priority
+int
+sys_setnice(void)
+{ 
+  int priority;
+
+  if(argint(0, &priority) < 0)
+    return -1;
+
+  if (priority < 0 || priority > 31)
+    return -1;
+  
+  myproc()->priority = (uint)priority;
+  
+  return 0;
+}
+
+// set scheduling mode (FIFO = 0, priority = 1)
+int
+sys_setSchd(void)
+{ 
+  int mode;
+
+  if(argint(0, &mode) < 0)
+    return -1;
+
+  if (mode != 0 || mode != 1)
+    return -1;
+  
+  return 0;
 }

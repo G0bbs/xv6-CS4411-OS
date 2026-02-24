@@ -24,6 +24,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int get_mem_size(void);
+int getnice(void);
+int setnice(void);
+int setSchd(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
