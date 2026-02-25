@@ -117,6 +117,8 @@ found:
 
   // Set creation tick to current ticks
   p->ctick = ticks;
+  
+  p->switchcnt = 0;
 
   return p;
 }
@@ -147,6 +149,10 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
+
+  p->priority = DEFAULT_PRIORITY;
+  p->ctick = ticks;
+  p->switchcnt = 0;
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above

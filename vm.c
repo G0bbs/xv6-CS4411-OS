@@ -174,6 +174,9 @@ switchuvm(struct proc *p)
   mycpu()->ts.iomb = (ushort) 0xFFFF;
   ltr(SEG_TSS << 3);
   lcr3(V2P(p->pgdir));  // switch to process's address space
+
+  p->switchcnt++;
+
   popcli();
 }
 
