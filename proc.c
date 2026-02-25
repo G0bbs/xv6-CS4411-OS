@@ -115,6 +115,9 @@ found:
   // Set priority of new process
   p->priority = DEFAULT_PRIORITY;
 
+  // Set creation tick to current ticks
+  p->ctick = ticks;
+
   return p;
 }
 

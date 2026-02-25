@@ -24,3 +24,5 @@
 #define SYS_getnice 23
 #define SYS_setnice 24
 #define SYS_setSchd 25
+#define SYS_gettt 26
+#define SYS_getSwtchCnt 27

@@ -107,6 +107,8 @@ extern int sys_get_mem_size(void);
 extern int sys_getnice(void);
 extern int sys_setnice(void);
 extern int sys_setSchd(void);
+extern int sys_gett(void);
+extern int sys_getSwtchCnt(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -131,6 +133,11 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_get_mem_size]  sys_get_mem_size,
+[SYS_getnice] sys_getnice,
+[SYS_setnice] sys_setnice,
+[SYS_setSchd] sys_setSchd,
+[SYS_gett] sys_gettt,
+[SYS_getSwtchCnt] sys_getSwtchCnt,
 };
 
 void

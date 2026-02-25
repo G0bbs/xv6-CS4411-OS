@@ -135,3 +135,18 @@ sys_setSchd(void)
   
   return 0;
 }
+
+// return process turnaround time
+int
+sys_gettt(void)
+{
+  uint turnaround = ticks - myproc()->ctick;	
+  return turnaround;
+}
+
+// return process turnaround time
+int
+sys_getSwtchCnt(void)
+{
+  return myproc->switchcnt;
+}

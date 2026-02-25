@@ -27,6 +27,8 @@ int get_mem_size(void);
 int getnice(void);
 int setnice(void);
 int setSchd(void);
+int gettt(void);
+int getSwtchCnt(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
