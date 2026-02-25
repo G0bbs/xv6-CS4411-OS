@@ -107,7 +107,7 @@ extern int sys_get_mem_size(void);
 extern int sys_getnice(void);
 extern int sys_setnice(void);
 extern int sys_setSchd(void);
-extern int sys_gett(void);
+extern int sys_gettt(void);
 extern int sys_getSwtchCnt(void);
 
 static int (*syscalls[])(void) = {
@@ -136,7 +136,7 @@ static int (*syscalls[])(void) = {
 [SYS_getnice] sys_getnice,
 [SYS_setnice] sys_setnice,
 [SYS_setSchd] sys_setSchd,
-[SYS_gett] sys_gettt,
+[SYS_gettt] sys_gettt,
 [SYS_getSwtchCnt] sys_getSwtchCnt,
 };
 

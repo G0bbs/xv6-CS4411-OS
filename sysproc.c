@@ -148,5 +148,5 @@ sys_gettt(void)
 int
 sys_getSwtchCnt(void)
 {
-  return myproc->switchcnt;
+  return (int)myproc()->switchcnt;
 }
