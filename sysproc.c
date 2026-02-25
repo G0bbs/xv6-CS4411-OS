@@ -133,6 +133,8 @@ sys_setSchd(void)
   if (mode != 0 || mode != 1)
     return -1;
   
+  scheduler_mode = mode;
+
   return 0;
 }
 
