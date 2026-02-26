@@ -113,15 +113,13 @@ sys_setnice(void)
   int pid;
   int priority;
 
-  if(argint(0, &pid) < 0 || argint(0, &priority) < 0)
+  if(argint(0, &pid) < 0 || argint(1, &priority) < 0)
     return -1;
 
   if (priority < 0 || priority > 31)
     return -1;
   
-  setnice(pid, priority);
-
-  return 0;
+  return setnice(pid, priority);
 }
 
 // set scheduling mode (FIFO = 0, priority = 1)
@@ -133,7 +131,7 @@ sys_setSchd(void)
   if(argint(0, &mode) < 0)
     return -1;
 
-  if (mode != 0 || mode != 1)
+  if (mode < 0 || mode > 1)
     return -1;
   
   scheduler_mode = mode;
@@ -145,13 +143,12 @@ sys_setSchd(void)
 int
 sys_gettt(void)
 {
-  uint turnaround = ticks - myproc()->ctick;	
-  return turnaround;
+  return ticks - myproc()->ctick;
 }
 
 // return process turnaround time
 int
 sys_getSwtchCnt(void)
 {
-  return (int)myproc()->switchcnt;
+  return myproc()->switchcnt;
 }

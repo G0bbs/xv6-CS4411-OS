@@ -346,9 +346,46 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+    
+    if (scheduler_mode == 0) {
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	if(p->state != RUNNABLE)
+	  continue;
+
+	// Switch to chosen process.  It is the process's job
+	// to release ptable.lock and then reacquire it
+	// before jumping back to us.
+	c->proc = p;
+	switchuvm(p);
+	p->state = RUNNING;
+
+	swtch(&(c->scheduler), p->context);
+	switchkvm();
+
+	// Process is done running for now.
+	// It should have changed its p->state before coming back.
+	c->proc = 0;
+      }
+    }
+    else {
+      struct proc *highest_priority = 0;
+
+      // Find highest priority process
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	if (p->state != RUNNABLE) 
+	  continue;
+	
+	if (highest_priority == 0 || highest_priority->priority > p->priority) {
+	  highest_priority = p;
+	}
+      }
+
+      if (highest_priority == 0) {
+	release(&ptable.lock);
+	continue;
+      }
+
+      p = highest_priority;
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -561,7 +598,7 @@ setnice(int pid, int priority)
     if(p->pid == pid){
       p->priority = priority;
       release(&ptable.lock);
-      return 0;
+      return priority;
     }
   }
   release(&ptable.lock);
