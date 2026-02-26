@@ -25,8 +25,8 @@ int sleep(int);
 int uptime(void);
 int get_mem_size(void);
 int getnice(void);
-int setnice(void);
-int setSchd(void);
+int setnice(int pid, int nice);
+int setSchd(int mode);
 int gettt(void);
 int getSwtchCnt(void);
 

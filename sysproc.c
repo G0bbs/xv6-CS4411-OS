@@ -107,10 +107,11 @@ sys_getnice(void)
 // set process priority
 int
 sys_setnice(void)
-{ 
+{
+  int pid;
   int priority;
 
-  if(argint(0, &priority) < 0)
+  if(argint(0, &pid) < 0 || argint(0, &priority) < 0)
     return -1;
 
   if (priority < 0 || priority > 31)
