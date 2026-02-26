@@ -1,6 +1,5 @@
 #define DEFAULT_PRIORITY 15
 
-int scheduler_mode = 0;
 
 // Per-CPU state
 struct cpu {

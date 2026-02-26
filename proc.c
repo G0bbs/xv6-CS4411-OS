@@ -14,6 +14,8 @@ struct {
 
 static struct proc *initproc;
 
+int scheduler_mode = 0;
+
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
@@ -389,6 +391,9 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
+
+  myproc()->switchcnt++;
+
   swtch(&p->context, mycpu()->scheduler);
   mycpu()->intena = intena;
 }
@@ -544,3 +549,22 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+// Update niceness of the process with the given pid.
+int
+setnice(int pid, int priority)
+{
+  struct proc *p;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      p->priority = priority;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+

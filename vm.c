@@ -175,7 +175,7 @@ switchuvm(struct proc *p)
   ltr(SEG_TSS << 3);
   lcr3(V2P(p->pgdir));  // switch to process's address space
 
-  p->switchcnt++;
+  //p->switchcnt++;
 
   popcli();
 }

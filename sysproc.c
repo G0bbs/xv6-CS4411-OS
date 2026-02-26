@@ -7,6 +7,8 @@
 #include "mmu.h"
 #include "proc.h"
 
+extern int scheduler_mode;
+
 int
 sys_fork(void)
 {
@@ -117,8 +119,8 @@ sys_setnice(void)
   if (priority < 0 || priority > 31)
     return -1;
   
-  myproc()->priority = (uint)priority;
-  
+  setnice(pid, priority);
+
   return 0;
 }
 
