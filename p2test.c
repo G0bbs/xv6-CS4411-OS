@@ -32,7 +32,6 @@ int main(int argc, char **argv){
 
     int policy = atoi(argv[1]);
     setSchd(policy);
-    printf(1, "Policy set to %d\n", policy);
 
     setnice(getpid(), 0);
 
