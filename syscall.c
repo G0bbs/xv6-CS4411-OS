@@ -109,6 +109,7 @@ extern int sys_setnice(void);
 extern int sys_setSchd(void);
 extern int sys_gettt(void);
 extern int sys_getSwtchCnt(void);
+extern int sys_vaddr2phyaddr(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -138,6 +139,7 @@ static int (*syscalls[])(void) = {
 [SYS_setSchd] sys_setSchd,
 [SYS_gettt] sys_gettt,
 [SYS_getSwtchCnt] sys_getSwtchCnt,
+[SYS_vaddr2phyaddr] sys_vaddr2phyaddr,
 };
 
 void

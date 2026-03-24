@@ -29,6 +29,7 @@ int setnice(int pid, int nice);
 int setSchd(int mode);
 int gettt(void);
 int getSwtchCnt(void);
+int vaddr2phyaddr(void*);
 
 // ulib.c
 int stat(const char*, struct stat*);

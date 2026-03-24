@@ -154,3 +154,15 @@ sys_getSwtchCnt(void)
 {
   return myproc()->switchcnt;
 }
+
+// return physical address for the given virtual address
+int
+sys_vaddr2phyaddr(void)
+{
+  int phys;
+
+  if (argint(0, &phys) < 0)
+    return -1;
+  
+  return (int) P2V(phys);
+}

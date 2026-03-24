@@ -26,3 +26,4 @@
 #define SYS_setSchd 25
 #define SYS_gettt 26
 #define SYS_getSwtchCnt 27
+#define SYS_vaddr2phyaddr 28
