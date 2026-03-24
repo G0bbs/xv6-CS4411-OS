@@ -60,6 +60,18 @@ trap(struct trapframe *tf)
       // Round down to page
       uint pgnum = PGROUNDDOWN(fltaddr);
 
+      uint ptr = kalloc();
+      if (ptr == 0) {
+	cprintf("lazy: out of mem\n");
+      }
+
+      memset(ptr, 0, PGSIZE);
+      if (mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+	cprintf("lazy: out of mem\n");
+	kfree(ptr);
+	return 0;
+      }
+
       //allocuvm(myproc->pgdir, sz, sz + ());
       cprintf("expand pagefault: rcr2():%d myproc()->sz:%d "
 	      "pgnum = %d   			    \n",
