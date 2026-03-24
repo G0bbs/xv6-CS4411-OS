@@ -47,17 +47,29 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
-  case T_IRQ0 + T_PGFLT:
+  case T_PGFLT:
     uint sz;
     struct proc *curproc = myproc();
 
     sz = curproc->sz;
     
     // Find if page fault is within process size
-    if (rcr2() < sz) {
+    
+    uint fltaddr = rcr2();
+    if (fltaddr < sz) {
+      // Round down to page
+      uint pgnum = PGROUNDDOWN(fltaddr);
+
       //allocuvm(myproc->pgdir, sz, sz + ());
+      cprintf("expand pagefault: rcr2():%d myproc()->sz:%d "
+	      "pgnum = %d   			    \n",
+	      rcr2(), myproc()->sz, pgnum);
     }
-    cprintf("pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
+    else
+    {
+
+    	cprintf("no expand pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
+    }
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_TIMER:
