@@ -47,6 +47,19 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
+  case T_IRQ0 + T_PGFLT:
+    uint sz;
+    struct proc *curproc = myproc();
+
+    sz = curproc->sz;
+    
+    // Find if page fault is within process size
+    if (rcr2() < sz) {
+      //allocuvm(myproc->pgdir, sz, sz + ());
+    }
+    cprintf("pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
+    lapiceoi();
+    break;
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       acquire(&tickslock);
