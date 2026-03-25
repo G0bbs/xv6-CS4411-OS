@@ -219,6 +219,30 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
   return 0;
 }
 
+// Alloc one page and fill with PTEs
+int
+handle_lazyload(pde_t *pgdir, uint pgnum)
+{
+  // Allocate page
+  char* mem = kalloc();
+  if (mem == 0) {
+    cprintf("lazy: out of mem\n");
+  }
+
+  // Zero page
+  memset(mem, 0, PGSIZE);
+  
+  // Fill with PTEs
+  if (mappages(myproc()->pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+    cprintf("lazy: out of mem\n");
+    kfree(mem);
+    return -1;
+  }
+
+  return 1;
+}
+
+
 // Allocate page tables and physical memory to grow process from oldsz to
 // newsz, which need not be page aligned.  Returns new size or 0 on error.
 int

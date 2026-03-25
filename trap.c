@@ -14,7 +14,10 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
-void
+extern int
+mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+
+	void
 tvinit(void)
 {
   int i;
@@ -57,29 +60,15 @@ trap(struct trapframe *tf)
     
     uint fltaddr = rcr2();
     if (fltaddr < sz) {
-      // Round down to page
       uint pgnum = PGROUNDDOWN(fltaddr);
-
-      uint ptr = kalloc();
-      if (ptr == 0) {
-	cprintf("lazy: out of mem\n");
-      }
-
-      memset(ptr, 0, PGSIZE);
-      if (mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
-	cprintf("lazy: out of mem\n");
-	kfree(ptr);
-	return 0;
-      }
-
-      //allocuvm(myproc->pgdir, sz, sz + ());
       cprintf("expand pagefault: rcr2():%d myproc()->sz:%d "
 	      "pgnum = %d   			    \n",
 	      rcr2(), myproc()->sz, pgnum);
-    }
-    else
-    {
 
+
+      handle_lazyload(curproc->pgdir, pgnum);
+    }
+    else {
     	cprintf("no expand pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
     }
     lapiceoi();
