@@ -61,15 +61,15 @@ trap(struct trapframe *tf)
     uint fltaddr = rcr2();
     if (fltaddr < sz) {
       uint pgnum = PGROUNDDOWN(fltaddr);
-      cprintf("expand pagefault: rcr2():%d myproc()->sz:%d "
-	      "pgnum = %d   			    \n",
-	      rcr2(), myproc()->sz, pgnum);
+      // cprintf("expand pagefault: rcr2():%d myproc()->sz:%d "
+	//       "pgnum = %d   			    \n",
+	//      rcr2(), myproc()->sz, pgnum);
 
 
       handle_lazyload(curproc->pgdir, pgnum);
     }
     else {
-    	cprintf("no expand pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
+    	// cprintf("no expand pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
     }
     lapiceoi();
     break;
