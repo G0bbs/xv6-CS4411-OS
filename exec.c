@@ -60,13 +60,57 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
+  // 
+  // Old mem:
+  // 	--------- USER MEMORY:
+  // 	code
+  // 	stack 
+  // 	heap
+  // 	--------- KERNEL MEMORY:
+  // 	KERN_BASE
+  // 	  
+  //
+  //  sz: tracks size of stack and heap
+  //
+  // ===================================
+  //
+  // New mem:
+  // 	--------- USER MEMORY:
+  // 	code
+  // 	heap
+  // 	...
+  // 	stack
+  // 	--------- KERNEL MEMORY:
+  // 	KERN_BASE at 0x80000000
+  //
+  //  sz: tracks size of stack and heap
+  //  st: tracks the top of the stack (required for stack growth)
+  //  ht: tracks te top of the heap (should work like old sz)
+  //
+  //  Could possibly use arithmetic like
+  //    st = sz - ht
+  //  but it doesn't hurt to just track everything
+  //
+
+  /* NEW STACK ALLOCATION */
+  // Allocate stack page just before KERN_BASE
+  int stack_loc = PGROUNDUP(KERN_BASE - PG_SIZE);
+  if (handle_lazyload(pgdir, stack_loc) < 0)
+    goto bad;
+  sp = stack_loc;
+
+
+  /* OLD STACK ALLOCATION
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
-  sp = sz;
+  sp = sz; // sets stack pointer to point at newly allocated stack
+  */
+
+
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
