@@ -130,6 +130,7 @@ found:
 void
 userinit(void)
 {
+  cprintf("initproc\n");
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
@@ -174,6 +175,7 @@ userinit(void)
 int
 growproc(int n)
 {
+  cprintf("growproc\n");
   uint hsz, old_hsz;
   struct proc *curproc = myproc();
 
@@ -199,6 +201,7 @@ growproc(int n)
 int
 fork(void)
 {
+  cprintf("fork\n");
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
@@ -347,7 +350,9 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+ 
+  static int times_around = 0;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -373,6 +378,8 @@ scheduler(void)
 	// Process is done running for now.
 	// It should have changed its p->state before coming back.
 	c->proc = 0;
+	
+	times_around++;
       }
     }
     else {

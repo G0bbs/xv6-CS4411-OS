@@ -353,12 +353,16 @@ char*
 uva2ka(pde_t *pgdir, char *uva)
 {
   pte_t *pte;
+  cprintf("\t\t1 uva2ka pgdir:0x%x uva:0x%x\n", pgdir, uva);
 
   pte = walkpgdir(pgdir, uva, 0);
+  cprintf("\t\t2 uva2ka pgdir:0x%x uva:0x%x pte:0x%x\n", pgdir, uva, pte);
   if((*pte & PTE_P) == 0)
     return 0;
+  cprintf("\t\t3 uva2ka pgdir:0x%x uva:0x%x\n", pgdir, uva);
   if((*pte & PTE_U) == 0)
     return 0;
+  cprintf("\t\t4 uva2ka pgdir:0x%x uva:0x%x\n", pgdir, uva);
   return (char*)P2V(PTE_ADDR(*pte));
 }
 
@@ -368,21 +372,30 @@ uva2ka(pde_t *pgdir, char *uva)
 int
 copyout(pde_t *pgdir, uint va, void *p, uint len)
 {
+  cprintf("copyout 1: pgdir:0x%x va:0x%x *p:0x%x len:%d\n", pgdir, va, p, len);
+
   char *buf, *pa0;
   uint n, va0;
 
   buf = (char*)p;
   while(len > 0){
+    cprintf("copyout 2: pgdir:0x%x va:0x%x *p:0x%x len:%d\n", pgdir, va, p, len);
+    cprintf("\tcopyout 1\n");
     va0 = (uint)PGROUNDDOWN(va);
+    cprintf("\tcopyout 2 va:0x%x va0:0x%x\n", va, va0);
     pa0 = uva2ka(pgdir, (char*)va0);
+    cprintf("\tcopyout 3\n");
     if(pa0 == 0)
       return -1;
     n = PGSIZE - (va - va0);
+    cprintf("\tcopyout 4\n");
     if(n > len)
       n = len;
     memmove(pa0 + (va - va0), buf, n);
+    cprintf("\tcopyout 4\n");
     len -= n;
     buf += n;
+    cprintf("\tcopyout 5\n");
     va = va0 + PGSIZE;
   }
   return 0;
@@ -409,7 +422,7 @@ allocmap(pde_t *pgdir, uint pgnum)
   memset(mem, 0, PGSIZE);
   
   // Fill with PTEs
-  if (mappages(myproc()->pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+  if (mappages(pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
     cprintf("lazy: out of mem\n");
     kfree(mem);
     return -1;

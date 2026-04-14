@@ -95,15 +95,23 @@ exec(char *path, char **argv)
 
   /* NEW STACK ALLOCATION */
   // Allocate stack page just before KERN_BASE
-  int stack_loc = PGROUNDUP(STACKBASE);
+  
+  int stack_loc = PGROUNDUP(STACKBASE-4);
+
+  // Allocate inacessible first page.
+  sz = PGROUNDUP(sz);
+  if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
+    goto bad;
+  clearpteu(pgdir, (char*)(sz - 1*PGSIZE));
 
   // function reuse: allocate, map, and fill page with PTEs
   if (allocmap(pgdir, stack_loc) < 0)
     goto bad;
-  sp = stack_loc;
-  ssz = PGSIZE;
+  sp = KERNBASE;
+  ssz = KERNBASE - PGSIZE;
 
-  /* OLD STACK ALLOCATION
+
+  /* OLD STACK ALLOCATION 
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
@@ -112,12 +120,21 @@ exec(char *path, char **argv)
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
   */
+  
+  cprintf("\tbefore:\n");
+  printproc();
+  cprintf("sp = 0x%x = %d (dec);\n", sp, sp);
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
+    cprintf("\tduring:\n");
+    printproc();
+    cprintf("sp = 0x%x = %d (dec);\n", sp, sp);
+    cprintf("stack begin: 0x%x, stack end: 0x%x\n", KERNBASE, KERNBASE - curproc->ssz);
+
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;
     ustack[3+argc] = sp;
