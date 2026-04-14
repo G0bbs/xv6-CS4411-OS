@@ -12,7 +12,7 @@ exec(char *path, char **argv)
 {
   char *s, *last;
   int i, off;
-  uint argc, sz, sp, ustack[3+MAXARG+1];
+  uint argc, sz, ssz, sp, ustack[3+MAXARG+1];
   struct elfhdr elf;
   struct inode *ip;
   struct proghdr ph;
@@ -84,8 +84,8 @@ exec(char *path, char **argv)
   // 	KERN_BASE at 0x80000000
   //
   //  sz: tracks size of stack and heap
-  //  st: tracks the top of the stack (required for stack growth)
-  //  ht: tracks te top of the heap (should work like old sz)
+  //  ssz: tracks size of the stack 
+  //  hsz: tracks size of the heap (should work like old sz)
   //
   //  Could possibly use arithmetic like
   //    st = sz - ht
@@ -93,12 +93,15 @@ exec(char *path, char **argv)
   //
 
   /* NEW STACK ALLOCATION */
+  
   // Allocate stack page just before KERN_BASE
-  int stack_loc = PGROUNDUP(KERN_BASE - PG_SIZE);
+  int stack_loc = PGROUNDUP(STACKBASE);
+
+  // function reuse: allocate, map, and fill page with PTEs
   if (handle_lazyload(pgdir, stack_loc) < 0)
     goto bad;
   sp = stack_loc;
-
+  ssz = PGSIZE;
 
   /* OLD STACK ALLOCATION
   // Allocate two pages at the next page boundary.
@@ -141,8 +144,15 @@ exec(char *path, char **argv)
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
   curproc->sz = sz;
+  
+  curproc->ssz = ssz;
+  curproc->hsz = 0;
+
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  
+  printproc();
+
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;

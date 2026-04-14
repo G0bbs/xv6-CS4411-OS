@@ -140,6 +140,8 @@ userinit(void)
     panic("userinit: out of memory?");
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   p->sz = PGSIZE;
+  p->ssz = PGSIZE;
+  p->hsz = 0;
   memset(p->tf, 0, sizeof(*p->tf));
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
@@ -172,18 +174,18 @@ userinit(void)
 int
 growproc(int n)
 {
-  uint sz;
+  uint hsz;
   struct proc *curproc = myproc();
 
-  sz = curproc->sz;
+  hsz = curproc->hsz;
   if(n > 0){
-    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+    if((hsz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   } else if(n < 0){
-    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+    if((hsz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
       return -1;
   }
-  curproc->sz = sz;
+  curproc->hsz = hsz;
   switchuvm(curproc);
   return 0;
 }
@@ -204,13 +206,13 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->hsz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
-  np->sz = curproc->sz;
+  np->hsz = curproc->hsz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
 
@@ -604,4 +606,27 @@ setnice(int pid, int priority)
   release(&ptable.lock);
   return -1;
 }
+
+
+void printproc() {
+  struct proc *curproc = myproc();
+
+  cprintf("curproc->pgdir = %d;\n"
+    "curproc->sz = %d;\n"
+    "\n"
+    "curproc->ssz = %d;\n"
+    "curproc->hsz = %d;\n"
+    "\n"
+    "curproc->tf->eip = %d;\n"  // main
+    "curproc->tf->esp = %d;\n",
+    curproc->pgdir,
+    curproc->sz,
+
+    curproc->ssz,
+    curproc->hsz,
+
+    curproc->tf->eip,
+    curproc->tf->esp);
+}
+
 
