@@ -613,3 +613,24 @@ setnice(int pid, int priority)
   return -1;
 }
 
+void
+printproc() {
+  struct proc *curproc = 	myproc();
+
+  cprintf("curproc->pgdir = %d;\n"
+    "curproc->sz = %d;\n"
+    "\n"
+    "curproc->ssz = %d;\n"
+    "curproc->hsz = %d;\n"
+    "\n"
+    "curproc->tf->eip = %d;\n"  // main
+    "curproc->tf->esp = %d;\n",
+    curproc->pgdir,
+    curproc->sz,
+
+    curproc->ssz,
+    curproc->hsz,
+
+    curproc->tf->eip,
+    curproc->tf->esp);
+}

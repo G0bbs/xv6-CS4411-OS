@@ -98,7 +98,7 @@ exec(char *path, char **argv)
   int stack_loc = PGROUNDUP(STACKBASE);
 
   // function reuse: allocate, map, and fill page with PTEs
-  if (handle_lazyload(pgdir, stack_loc) < 0)
+  if (allocmap(pgdir, stack_loc) < 0)
     goto bad;
   sp = stack_loc;
   ssz = PGSIZE;

@@ -395,3 +395,25 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+// Alloc one page and fill with PTEs
+int 
+allocmap(pde_t *pgdir, uint pgnum)
+{
+  // Allocate page
+  char* mem = kalloc();
+  if (mem == 0) {
+    cprintf("lazy: out of mem\n");
+  }
+
+  // Zero page
+  memset(mem, 0, PGSIZE);
+  
+  // Fill with PTEs
+  if (mappages(myproc()->pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+    cprintf("lazy: out of mem\n");
+    kfree(mem);
+    return -1;
+  }
+
+  return 1;
+}

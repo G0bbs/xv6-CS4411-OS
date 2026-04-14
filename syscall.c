@@ -19,8 +19,18 @@ fetchint(uint addr, int *ip)
 {
   struct proc *curproc = myproc();
 
-  if(addr >= curproc->sz || addr+4 > curproc->sz)
+  /* NEW CHECKING */
+  int inside_heap = addr >= curproc->hsz && (addr+4 > curproc->hsz);
+  int inside_stack = addr >= (KERNBASE - curproc->ssz) && addr < KERNBASE;
+  if(!inside_heap || !inside_stack)
     return -1;
+  
+  /* OLD CHECKING */
+  // If
+  // Above stack/heap/code OR upper half is above stack/heap/code
+  //if(addr >= curproc->sz || (addr+4 > curproc->sz))
+  //  return -1;
+  
   *ip = *(int*)(addr);
   return 0;
 }
