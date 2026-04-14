@@ -12,7 +12,7 @@ exec(char *path, char **argv)
 {
   char *s, *last;
   int i, off;
-  uint argc, sz, sp, ustack[3+MAXARG+1];
+  uint argc, sz, ssz, sp, ustack[3+MAXARG+1];
   struct elfhdr elf;
   struct inode *ip;
   struct proghdr ph;
@@ -60,6 +60,50 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
+
+  // 
+  // Old mem:
+  // 	--------- USER MEMORY:
+  // 	code
+  // 	stack 
+  // 	heap
+  // 	--------- KERNEL MEMORY:
+  // 	KERN_BASE
+  // 	  
+  //
+  //  sz: tracks size of stack and heap
+  //
+  // ===================================
+  //
+  // New mem:
+  // 	--------- USER MEMORY:
+  // 	code
+  // 	heap
+  // 	...
+  // 	stack
+  // 	--------- KERNEL MEMORY:
+  // 	KERN_BASE at 0x80000000
+  //
+  //  sz: tracks size of stack and heap
+  //  ssz: tracks size of the stack 
+  //  hsz: tracks size of the heap (should work like old sz)
+  //
+  //  Could possibly use arithmetic like
+  //    st = sz - ht
+  //  but it doesn't hurt to just track everything
+  //
+
+  /* NEW STACK ALLOCATION */
+  // Allocate stack page just before KERN_BASE
+  int stack_loc = PGROUNDUP(STACKBASE);
+
+  // function reuse: allocate, map, and fill page with PTEs
+  if (handle_lazyload(pgdir, stack_loc) < 0)
+    goto bad;
+  sp = stack_loc;
+  ssz = PGSIZE;
+
+  /* OLD STACK ALLOCATION
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
@@ -67,6 +111,7 @@ exec(char *path, char **argv)
     goto bad;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
+  */
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
@@ -97,8 +142,18 @@ exec(char *path, char **argv)
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
   curproc->sz = sz;
+  
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  
+  curproc->ssz = ssz;
+  curproc->hsz = 0;
+
+  curproc->tf->eip = elf.entry;  // main
+  curproc->tf->esp = sp;
+  
+  printproc();
+
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;
