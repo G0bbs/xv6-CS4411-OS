@@ -201,7 +201,7 @@ growproc(int n)
 int
 fork(void)
 {
-  cprintf("fork\n");
+  // cprintf("fork\n");
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
