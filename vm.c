@@ -190,9 +190,12 @@ inituvm(pde_t *pgdir, char *init, uint sz)
   if(sz >= PGSIZE)
     panic("inituvm: more than a page");
   mem = kalloc();
-  memset(mem, 0, PGSIZE);
+  memset(mem, 0, PGSIZE); 
   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
   memmove(mem, init, sz);
+
+  // Alloc stack
+  allocmap(pgdir, KERNBASE - PGSIZE);
 }
 
 // Load a program segment into pgdir.  addr must be page-aligned
@@ -202,6 +205,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 {
   uint i, pa, n;
   pte_t *pte;
+
+  // MAY CHANGE: handle hsz and ssz instead of sz
 
   if((uint) addr % PGSIZE != 0)
     panic("loaduvm: addr must be page aligned");
@@ -216,6 +221,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
     if(readi(ip, P2V(pa), offset+i, n) != n)
       return -1;
   }
+
   return 0;
 }
 
@@ -315,17 +321,18 @@ clearpteu(pde_t *pgdir, char *uva)
 
 // Given a parent process's page table, create a copy
 // of it for a child.
-pde_t*
-copyuvm(pde_t *pgdir, uint sz)
+int
+copyuvm(pde_t *pgdir, pde_t *npgdir, uint start, uint end)
 {
-  pde_t *d;
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
 
-  if((d = setupkvm()) == 0)
-    return 0;
-  for(i = 0; i < sz; i += PGSIZE){
+  // if((d = setupkvm()) == 0)
+    // return 0;
+
+  // Allocate heap pages
+  for(i = PGROUNDDOWN(start); i < end; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
@@ -333,17 +340,14 @@ copyuvm(pde_t *pgdir, uint sz)
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
-      goto bad;
+      return -1;
     memmove(mem, (char*)P2V(pa), PGSIZE);
-    if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
+    if(mappages(npgdir, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
       kfree(mem);
-      goto bad;
+      return -1;
     }
   }
-  return d;
 
-bad:
-  freevm(d);
   return 0;
 }
 
@@ -409,7 +413,7 @@ allocmap(pde_t *pgdir, uint pgnum)
   memset(mem, 0, PGSIZE);
   
   // Fill with PTEs
-  if (mappages(pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0) {
+  if (mappages(pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U|PTE_P) < 0) {
     cprintf("lazy: out of mem\n");
     kfree(mem);
     return -1;

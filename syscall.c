@@ -20,8 +20,8 @@ fetchint(uint addr, int *ip)
   struct proc *curproc = myproc();
 
   /* NEW CHECKING */
-  int inside_heap = addr >= curproc->hsz && (addr+4 > curproc->hsz);
-  int inside_stack = addr >= (KERNBASE - curproc->ssz) && addr < KERNBASE;
+  int inside_heap = (addr < curproc->hsz) && (addr+4 <= curproc->hsz);
+  int inside_stack = addr >= (KERNBASE - curproc->ssz) && addr + 4 <= KERNBASE;
   // cprintf("\nfetchint: addr=%d, heap_top=%d, stack_bottom=%d, stack_top=%d\n", addr, curproc->hsz, KERNBASE - curproc->ssz, KERNBASE);
   // cprintf("\tfetchint: ih:%d is:%d\n", inside_heap, inside_stack);
   // printproc();
@@ -46,18 +46,26 @@ fetchint(uint addr, int *ip)
 int
 fetchstr(uint addr, char **pp)
 {
-  char *s, *ep;
+  char *s;
+  uint ep;
   struct proc *curproc = myproc();
   
-  int inside_heap = addr >= curproc->hsz;
+  int inside_heap = addr < curproc->hsz;
   int inside_stack = addr >= (KERNBASE - curproc->ssz) && addr < KERNBASE;
   // cprintf("\nfetchstr: addr=%d, heap_top=%d, stack_bottom=%d, stack_top=%d\n", addr, curproc->hsz, KERNBASE - curproc->ssz, KERNBASE);
 
-  if(!inside_heap && !inside_stack)
+  if (inside_heap) {
+    ep = curproc->hsz;
+  }
+  else if (inside_stack) {
+    ep = KERNBASE;
+  }
+  else {
     return -1;
+  }
+
   *pp = (char*)addr;
-  ep = (char*)curproc->sz;
-  for(s = *pp; s < ep; s++){
+  for(s = *pp; (uint) s < ep; s++){
     if(*s == 0)
       return s - *pp;
   }
@@ -82,8 +90,15 @@ argptr(int n, char **pp, int size)
  
   if(argint(n, &i) < 0)
     return -1;
-  if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
+ 
+  uint addr = (uint)i;
+
+  int inside_heap = (addr < curproc->hsz) && (addr + size <= curproc->hsz);
+  int inside_stack = (addr >= (KERNBASE - curproc->ssz)) && (addr + size <= KERNBASE);
+  
+  if(size < 0 || (!inside_heap && !inside_stack))
     return -1;
+  
   *pp = (char*)i;
   return 0;
 }

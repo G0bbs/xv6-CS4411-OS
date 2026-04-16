@@ -142,14 +142,14 @@ userinit(void)
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   p->sz = PGSIZE;
   p->ssz = PGSIZE;
-  p->hsz = 0;
+  p->hsz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
   p->tf->es = p->tf->ds;
   p->tf->ss = p->tf->ds;
   p->tf->eflags = FL_IF;
-  p->tf->esp = PGSIZE;
+  p->tf->esp = KERNBASE;
   p->tf->eip = 0;  // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
@@ -175,7 +175,6 @@ userinit(void)
 int
 growproc(int n)
 {
-  cprintf("growproc\n");
   uint hsz, old_hsz;
   struct proc *curproc = myproc();
 
@@ -210,14 +209,27 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
+  
+  if((np->pgdir = setupkvm()) == 0)
+     goto bad;
 
-  // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc->pgdir, curproc->hsz)) == 0){
+  // Copy heap
+  if(copyuvm(curproc->pgdir, np->pgdir, 0, curproc->hsz) < 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
-    return -1;
+    goto bad;
   }
+
+  // Copy stack
+  if(copyuvm(curproc->pgdir, np->pgdir, KERNBASE - curproc->ssz, KERNBASE) < 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    goto bad;
+  }
+
+
   np->sz = curproc->sz;
   np->hsz = curproc->hsz;
   np->ssz = curproc->ssz;
@@ -244,6 +256,10 @@ fork(void)
   release(&ptable.lock);
 
   return pid;
+
+bad:
+  freevm(np->pgdir);
+  return -1;
 }
 
 // Exit the current process.  Does not return.

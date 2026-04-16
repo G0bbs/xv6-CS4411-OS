@@ -96,19 +96,21 @@ exec(char *path, char **argv)
   /* NEW STACK ALLOCATION */
   // Allocate stack page just before KERN_BASE
   
-  int stack_loc = PGROUNDUP(STACKBASE-4);
-
-  // Allocate inacessible first page.
-  sz = PGROUNDUP(sz);
-  if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
-    goto bad;
-  clearpteu(pgdir, (char*)(sz - 1*PGSIZE));
-
   // function reuse: allocate, map, and fill page with PTEs
+  uint stack_loc = KERNBASE - 1*PGSIZE;
   if (allocmap(pgdir, stack_loc) < 0)
     goto bad;
+
+  // Create guard page below stack
+  uint guard_loc = KERNBASE - 2*PGSIZE;
+  if (allocmap(pgdir, guard_loc) < 0)
+    goto bad;
+  
+  clearpteu(pgdir, (char*)guard_loc);
+  
   sp = KERNBASE;
-  ssz = KERNBASE - PGSIZE;
+  ssz = PGSIZE;
+
 
 
   /* OLD STACK ALLOCATION 
@@ -164,12 +166,12 @@ exec(char *path, char **argv)
   curproc->tf->esp = sp;
   
   curproc->ssz = ssz;
-  curproc->hsz = 0;
+  curproc->hsz = sz;
 
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   
-  printproc();
+  // printproc();
 
   switchuvm(curproc);
   freevm(oldpgdir);
