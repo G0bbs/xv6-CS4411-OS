@@ -130,19 +130,10 @@ found:
 void
 userinit(void)
 {
-  cprintf("initproc\n");
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
-  
-  // Alloc stack
-  // allocmap(pgdir, KERNBASE - PGSIZE);
-	
-  // Map AND clear the guard page
-  // uint guard_loc = KERNBASE - 2*PGSIZE;
-  // allocmap(pgdir, guard_loc);
-  // clearpteu(pgdir, (char*)guard_loc);
   
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -208,7 +199,6 @@ growproc(int n)
 int
 fork(void)
 {
-  // cprintf("fork\n");
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();

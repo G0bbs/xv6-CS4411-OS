@@ -22,9 +22,6 @@ fetchint(uint addr, int *ip)
   /* NEW CHECKING */
   int inside_heap = (addr < curproc->hsz) && (addr+4 <= curproc->hsz);
   int inside_stack = addr >= (KERNBASE - curproc->ssz) && addr + 4 <= KERNBASE;
-  // cprintf("\nfetchint: addr=%d, heap_top=%d, stack_bottom=%d, stack_top=%d\n", addr, curproc->hsz, KERNBASE - curproc->ssz, KERNBASE);
-  // cprintf("\tfetchint: ih:%d is:%d\n", inside_heap, inside_stack);
-  // printproc();
   if(!inside_heap && !inside_stack)
     cprintf("fetchint err\n");
   if(!inside_heap && !inside_stack)
@@ -52,7 +49,6 @@ fetchstr(uint addr, char **pp)
   
   int inside_heap = addr < curproc->hsz;
   int inside_stack = addr >= (KERNBASE - curproc->ssz) && addr < KERNBASE;
-  // cprintf("\nfetchstr: addr=%d, heap_top=%d, stack_bottom=%d, stack_top=%d\n", addr, curproc->hsz, KERNBASE - curproc->ssz, KERNBASE);
 
   if (inside_heap) {
     ep = curproc->hsz;

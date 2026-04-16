@@ -123,19 +123,12 @@ exec(char *path, char **argv)
   sp = sz;
   */
   
-  // cprintf("\tbefore:\n");
-  // printproc();
-  // cprintf("sp = 0x%x = %d (dec);\n", sp, sp);
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
-    // cprintf("\tduring:\n");
-    // printproc();
-    // cprintf("sp = 0x%x = %d (dec);\n", sp, sp);
-    // cprintf("stack begin: 0x%x, stack end: 0x%x\n", KERNBASE, KERNBASE - curproc->ssz);
 
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;
@@ -168,9 +161,6 @@ exec(char *path, char **argv)
   curproc->ssz = ssz;
   curproc->hsz = sz;
 
-  curproc->tf->eip = elf.entry;  // main
-  curproc->tf->esp = sp;
-  
   // printproc();
 
   switchuvm(curproc);
