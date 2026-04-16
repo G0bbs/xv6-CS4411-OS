@@ -136,6 +136,14 @@ userinit(void)
 
   p = allocproc();
   
+  // Alloc stack
+  // allocmap(pgdir, KERNBASE - PGSIZE);
+	
+  // Map AND clear the guard page
+  // uint guard_loc = KERNBASE - 2*PGSIZE;
+  // allocmap(pgdir, guard_loc);
+  // clearpteu(pgdir, (char*)guard_loc);
+  
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");

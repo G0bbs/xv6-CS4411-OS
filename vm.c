@@ -194,7 +194,6 @@ inituvm(pde_t *pgdir, char *init, uint sz)
   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
   memmove(mem, init, sz);
 
-  // Alloc stack
   allocmap(pgdir, KERNBASE - PGSIZE);
 }
 
@@ -319,6 +318,21 @@ clearpteu(pde_t *pgdir, char *uva)
   *pte &= ~PTE_U;
 }
 
+
+// Add PTE_U on a page.
+// Used to change guard pages into user stack pages
+void
+addpteu(pde_t *pgdir, char *uva)
+{
+  pte_t *pte;
+
+  pte = walkpgdir(pgdir, uva, 0);
+  if(pte == 0)
+    panic("addpteu");
+  *pte |= PTE_U;
+}
+
+
 // Given a parent process's page table, create a copy
 // of it for a child.
 int
@@ -406,7 +420,7 @@ allocmap(pde_t *pgdir, uint pgnum)
   // Allocate page
   char* mem = kalloc();
   if (mem == 0) {
-    cprintf("lazy: out of mem\n");
+    panic("allocmap: system out of memory\n");
   }
 
   // Zero page
@@ -414,7 +428,7 @@ allocmap(pde_t *pgdir, uint pgnum)
   
   // Fill with PTEs
   if (mappages(pgdir, (char*)pgnum, PGSIZE, V2P(mem), PTE_W|PTE_U|PTE_P) < 0) {
-    cprintf("lazy: out of mem\n");
+    panic("allocmap: system out of memory\n");
     kfree(mem);
     return -1;
   }

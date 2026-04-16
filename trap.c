@@ -55,15 +55,23 @@ trap(struct trapframe *tf)
     
     // Find if page fault is within process size
     
+
     uint fltaddr = rcr2();
-    if (fltaddr >= KERNBASE - ssz - PGSIZE && fltaddr < KERNBASE) {
-      uint pgnum = PGROUNDDOWN(fltaddr);
-      // cprintf("expand pagefault: rcr2():%d myproc()->sz:%d "
-	//       "pgnum = %d   			    \n",
-	//      rcr2(), myproc()->sz, pgnum);
+    uint fault_page = PGROUNDDOWN(fltaddr);
+    uint guard_page = KERNBASE - ssz - PGSIZE;
+    // cprintf("page fault: Stack at [0x%x-0x%x], guard page starts at 0x%x, accessed 0x%x (page 0x%x)\n", KERNBASE, KERNBASE - ssz, guard_page, fltaddr, fault_page);
+    if (fault_page == guard_page) {
+      // cprintf("fault in guard page\n");
 
+      // Add back user permissions to old guard page
+      addpteu(curproc->pgdir, (char*)guard_page);
 
-      allocmap(curproc->pgdir, pgnum);
+      // Should trigger a remap fault if heap and stack collide.
+      uint new_guard = guard_page - PGSIZE;
+      allocmap(curproc->pgdir, new_guard);
+      clearpteu(curproc->pgdir, (char*)new_guard);
+
+      curproc->ssz += PGSIZE;
     }
     else {
     	// cprintf("no expand pagefault: rcr2():%d myproc()->sz:%d\n", rcr2(), myproc()->sz);
