@@ -185,6 +185,7 @@ UPROGS=\
 	_procmemsize\
 	_p2test\
 	_p4test1\
+	_p4test2\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
